@@ -53,6 +53,34 @@ async function fetchWeather(city: string): Promise<WeatherInfo> {
   };
 }
 
+/* ---------------- 汇率（open.er-api.com，无需 API Key） ---------------- */
+
+const CURRENCY_ALIASES: Record<string, string> = {
+  美元: 'USD', 美金: 'USD', 美刀: 'USD',
+  人民币: 'CNY', 块: 'CNY',
+  日元: 'JPY', 日币: 'JPY',
+  欧元: 'EUR', 英镑: 'GBP', 港币: 'HKD', 港元: 'HKD',
+  韩元: 'KRW', 澳元: 'AUD', 澳币: 'AUD', 加元: 'CAD',
+};
+
+const CURRENCY_CODES = new Set(['USD', 'CNY', 'JPY', 'EUR', 'GBP', 'HKD', 'KRW', 'AUD', 'CAD', 'RMB']);
+
+/** 把「美元 / USD / usd」等写法统一成 3 位货币代码 */
+function resolveCurrency(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const up = raw.toUpperCase();
+  if (up === 'RMB') return 'CNY';
+  if (CURRENCY_CODES.has(up)) return up;
+  return CURRENCY_ALIASES[raw] ?? CURRENCY_ALIASES[up] ?? null;
+}
+
+async function fetchRate(from: string, to: string): Promise<number> {
+  const data = await fetch(`https://open.er-api.com/v6/latest/${from}`).then((r) => r.json());
+  const rate = data?.rates?.[to];
+  if (typeof rate !== 'number') throw new Error('汇率数据暂时不可用');
+  return rate;
+}
+
 /* ---------------- 计算器（安全表达式求值） ---------------- */
 
 function evalExpression(expr: string): number | null {
@@ -132,6 +160,32 @@ async function route(text: string, ctx: SkillContext): Promise<SkillResult | nul
   // 番茄钟
   if (/番茄钟|专注|pomodoro/i.test(t)) {
     return { text: '番茄钟已就绪，点击开始专注：', widget: 'pomodoro' };
+  }
+
+  // 汇率
+  const CUR = '美元|美金|美刀|日元|日币|欧元|英镑|港币|港元|韩元|澳元|澳币|加元|人民币|[A-Za-z]{3}';
+  const fxQuery = t.match(new RegExp(`^汇率[\\s:：]*(${CUR})[\\s到对换成/]+(${CUR})[?？]?$`, 'i'));
+  const fxConvert = t.match(
+    new RegExp(`^(\\d+(?:\\.\\d+)?)?\\s*(${CUR})\\s*(?:换|兑换成?|等于多少|等于|兑|是多少钱?|to)\\s*(${CUR})?[?？]?$`, 'i'),
+  );
+  if (fxQuery || fxConvert) {
+    const amount = fxConvert?.[1] ? Number(fxConvert[1]) : 1;
+    const from = resolveCurrency(fxQuery?.[1] ?? fxConvert?.[2]);
+    let to = resolveCurrency(fxQuery?.[2] ?? fxConvert?.[3]);
+    if (!to) to = from === 'CNY' ? 'USD' : 'CNY'; // 没说换成什么 → 默认人民币（人民币则默认美元）
+    if (!from) {
+      return { text: '没认出货币种类，试试「100美元换人民币」或「汇率 美元 日元」。' };
+    }
+    if (from === to) return { text: '同一种货币就不用换算啦 😄' };
+    try {
+      const rate = await fetchRate(from, to);
+      const result = Math.round(amount * rate * 100) / 100;
+      return {
+        text: `${amount} ${from} ≈ **${result} ${to}**\n（实时汇率 1 ${from} = ${rate} ${to}，数据源 open.er-api.com）`,
+      };
+    } catch (e) {
+      return { text: `汇率查询失败：${e instanceof Error ? e.message : '网络异常'}` };
+    }
   }
 
   // 计算

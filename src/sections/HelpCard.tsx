@@ -4,6 +4,7 @@ const SKILLS: { cmd: string; desc: string }[] = [
   { cmd: '记一下 周四给客户回电话', desc: '快速记录笔记' },
   { cmd: '查看笔记', desc: '浏览我的笔记' },
   { cmd: '上海天气', desc: '查询实时天气（Open-Meteo）' },
+  { cmd: '100美元换人民币', desc: '实时汇率换算' },
   { cmd: '计算 128 * 46 + 9', desc: '安全表达式计算' },
   { cmd: '现在几点 / 今天几号', desc: '时间与日期' },
   { cmd: '番茄钟', desc: '25 分钟专注计时' },
