@@ -18,7 +18,7 @@ export default function App() {
   const [settings, setSettings] = useLocalStorage<AssistantSettings>('isme.settings', {
     baseUrl: '',
     apiKey: '',
-    model: 'gpt-4o-mini',
+    model: '',
     userName: '',
   });
   const [settingsOpen, setSettingsOpen] = useState(false);

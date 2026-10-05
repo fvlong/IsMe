@@ -19,7 +19,15 @@
 
 - 🔒 **本地优先**：对话、待办、笔记、设置全部存于浏览器 localStorage，不上传任何数据
 - 🧩 **技能化架构**：意图解析 → 技能路由（`src/lib/assistant.ts`），新增技能只需添加一条路由
-- 🤖 **可选 LLM 增强**：在设置中填入任意 OpenAI 兼容接口（Base URL + Key + 模型），未命中本地技能的对话自动交给大模型
+- 🤖 **可选 LLM 增强**：设置里内置 DeepSeek / OpenAI 一键预设（也支持任何 OpenAI 兼容接口），未命中本地技能的对话自动交给大模型
+
+## 🔌 接入 DeepSeek（30 秒）
+
+1. 打开右上角 ⚙️ 设置 → 点「DeepSeek」预设（自动填好 Base URL 和模型）
+2. 到 [platform.deepseek.com](https://platform.deepseek.com/api_keys) 创建 API Key，粘贴进来
+3. 保存。日常对话用 `deepseek-chat`（V3），复杂推理可改 `deepseek-reasoner`（R1）
+
+Key 只保存在你自己的浏览器 localStorage 里，不经过任何第三方服务器。
 - 🖥️ **双栏工作台**：左侧对话流，右侧待办 / 笔记 / 专注面板，技能结果以交互卡片形式内嵌在对话中
 
 ## 🚀 快速开始

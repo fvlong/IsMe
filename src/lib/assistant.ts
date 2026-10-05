@@ -233,7 +233,7 @@ async function askLLM(text: string, settings: AssistantSettings): Promise<string
         Authorization: `Bearer ${settings.apiKey}`,
       },
       body: JSON.stringify({
-        model: settings.model || 'gpt-4o-mini',
+        model: settings.model || (settings.baseUrl.includes('deepseek') ? 'deepseek-chat' : 'gpt-4o-mini'),
         messages: [
           {
             role: 'system',
